@@ -5,10 +5,9 @@
 const jwt = require('../utils/jwt')
 
 module.exports = (req, res, next) => {
-  const token = req.headers.Authorization
+  const token = req.headers.authorization
   jwt.verifyToken(token)
   .then(item=>next())
   .catch(err=>res.status(400).json(err))
   
-  res.status(401).json({ you: 'shall not pass!' });
 };

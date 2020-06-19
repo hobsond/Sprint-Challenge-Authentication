@@ -1,6 +1,8 @@
 const router = require('express').Router();
+const crypt = require('bcrypt')
 const db = require('../database/dbConfig')
 const generateToken = require('../utils/jwt').generateToken
+
 
 router.get('/',(req,res)=>{
   res.status(200).json('hello')
@@ -11,6 +13,8 @@ router.post('/register', (req, res) => {
   const data = req.body
   const{username,password} = data
   if(username && password){
+    data.password = crypt.hashSync(password,12)
+    
     generateToken(data)
     .then(token=>{
       db('users')
@@ -37,9 +41,19 @@ router.post('/login', (req, res) => {
     db('users')
     .where({username})
     .then(item=>{
-      generateToken(item[0])
-      .then(token=>res.status(200).json(token))
+      crypt.compare(password,item[0].password,(err,result)=>{
+        if(result){
+        return  generateToken(item[0])
+      .then(token=>res.status(200).json({token}))
       .catch(err=>res.status(500).json(err))
+
+        }
+        else{
+          return res.status(500).json(err)
+
+        }
+      })
+      
     })
   .catch(error =>res.status(400).json({message:'user does not exist'}))
 
